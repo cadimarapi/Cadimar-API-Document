@@ -360,7 +360,282 @@ else:
 
 ---
 
-## 3. Add Partner to TikTok Account
+## 3. Configure Auto-Deposit for TikTok Account
+
+Endpoint to configure automatic deposit settings for a TikTok account. The system will automatically add funds when the balance falls below the specified threshold.
+
+### Request
+
+```http
+POST /api/dealer/tiktok/accounts/{uid}/auto-deposit
+```
+
+**Path Parameters:**
+- `uid` (String, required): TikTok account UID
+
+**Headers:**
+```
+X-API-Key: your-api-key-here
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "enabled": true,
+  "threshold": 100.00,
+  "amount": 500.00,
+  "mode": 2,
+  "maxTimes": 10,
+  "totalAmount": null
+}
+```
+
+### Request Parameters
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `enabled` | Boolean | Yes | Enable/disable auto-deposit |
+| `threshold` | BigDecimal | Yes | Minimum balance to trigger auto-deposit |
+| `amount` | BigDecimal | Yes | Amount to deposit each time (must be > 0) |
+| `mode` | Integer | Yes | Auto-deposit mode: 1 (unlimited), 2 (max times), 3 (total amount) |
+| `maxTimes` | Integer | Conditional | Required if mode = 2. Maximum number of auto-deposits allowed |
+| `totalAmount` | BigDecimal | Conditional | Required if mode = 3. Total amount limit for all auto-deposits |
+
+### Auto-Deposit Modes
+
+| Mode | Description | Required Fields |
+|------|-------------|----------------|
+| 1 | **Unlimited** - Auto-deposit will continue indefinitely | `enabled`, `threshold`, `amount`, `mode` |
+| 2 | **Max Times** - Auto-deposit up to N times | `enabled`, `threshold`, `amount`, `mode`, `maxTimes` |
+| 3 | **Total Amount** - Auto-deposit until total reaches specified amount | `enabled`, `threshold`, `amount`, `mode`, `totalAmount` |
+
+### Success Response (200 OK)
+
+```json
+{
+  "code": "200",
+  "message": "Auto-deposit settings updated successfully",
+  "data": {
+    "uid": "7234567890123456789",
+    "autoDepositEnabled": true,
+    "autoDepositThreshold": 100.00,
+    "autoDepositAmount": 500.00,
+    "autoDepositMode": 2,
+    "autoDepositMaxTimes": 10,
+    "remainingTopupTimes": 10
+  }
+}
+```
+
+### Error Responses
+
+**Account Not Found (404 Not Found)**
+```json
+{
+  "code": "404",
+  "message": "Account not found or does not belong to the dealer."
+}
+```
+
+**Invalid Threshold (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "Threshold must be greater than or equal to 0"
+}
+```
+
+**Invalid Amount (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "Deposit amount must be greater than 0"
+}
+```
+
+**Invalid Mode (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "Mode must be 1 (unlimited), 2 (max times), or 3 (total amount)"
+}
+```
+
+**Missing maxTimes (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "maxTimes is required when mode is 2"
+}
+```
+
+**Invalid maxTimes (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "maxTimes must be greater than 0"
+}
+```
+
+**Missing totalAmount (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "totalAmount is required when mode is 3"
+}
+```
+
+**Invalid totalAmount (400 Bad Request)**
+```json
+{
+  "code": "400",
+  "message": "totalAmount must be greater than 0"
+}
+```
+
+### Usage Examples
+
+**cURL - Mode 1 (Unlimited):**
+```bash
+curl -X POST "https://app.cadimar.net/api/dealer/tiktok/accounts/7234567890123456789/auto-deposit" \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "threshold": 50.00,
+    "amount": 200.00,
+    "mode": 1
+  }'
+```
+
+**cURL - Mode 2 (Max Times):**
+```bash
+curl -X POST "https://app.cadimar.net/api/dealer/tiktok/accounts/7234567890123456789/auto-deposit" \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "threshold": 100.00,
+    "amount": 500.00,
+    "mode": 2,
+    "maxTimes": 10
+  }'
+```
+
+**cURL - Mode 3 (Total Amount):**
+```bash
+curl -X POST "https://app.cadimar.net/api/dealer/tiktok/accounts/7234567890123456789/auto-deposit" \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "threshold": 100.00,
+    "amount": 500.00,
+    "mode": 3,
+    "totalAmount": 5000.00
+  }'
+```
+
+**cURL - Disable Auto-Deposit:**
+```bash
+curl -X POST "https://app.cadimar.net/api/dealer/tiktok/accounts/7234567890123456789/auto-deposit" \
+  -H "X-API-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": false,
+    "threshold": 0,
+    "amount": 0,
+    "mode": 1
+  }'
+```
+
+**JavaScript (Axios) - Mode 2:**
+```javascript
+const axios = require('axios');
+
+axios.post(
+  'https://app.cadimar.net/api/dealer/tiktok/accounts/7234567890123456789/auto-deposit',
+  {
+    enabled: true,
+    threshold: 100.00,
+    amount: 500.00,
+    mode: 2,
+    maxTimes: 10
+  },
+  {
+    headers: {
+      'X-API-Key': 'your-api-key-here',
+      'Content-Type': 'application/json'
+    }
+  }
+)
+.then(response => {
+  console.log('Auto-deposit configured:', response.data.data);
+})
+.catch(error => {
+  console.error('Error:', error.response.data);
+});
+```
+
+**Python (Requests) - Mode 3:**
+```python
+import requests
+
+headers = {
+    'X-API-Key': 'your-api-key-here',
+    'Content-Type': 'application/json'
+}
+
+data = {
+    'enabled': True,
+    'threshold': 100.00,
+    'amount': 500.00,
+    'mode': 3,
+    'totalAmount': 5000.00
+}
+
+response = requests.post(
+    'https://app.cadimar.net/api/dealer/tiktok/accounts/7234567890123456789/auto-deposit',
+    json=data,
+    headers=headers
+)
+
+if response.status_code == 200:
+    result = response.json()['data']
+    print(f"Auto-deposit enabled: {result['autoDepositEnabled']}")
+    print(f"Threshold: ${result['autoDepositThreshold']}")
+    print(f"Amount per deposit: ${result['autoDepositAmount']}")
+else:
+    print(f"Error: {response.json()['message']}")
+```
+
+### How Auto-Deposit Works
+
+1. **Monitoring**: The system checks account balances periodically
+2. **Trigger**: When balance falls below `threshold`, auto-deposit is triggered
+3. **Execution**: System deposits `amount` from dealer's wallet to the account
+4. **Mode Enforcement**:
+   - **Mode 1**: Continues indefinitely
+   - **Mode 2**: Stops after `maxTimes` deposits
+   - **Mode 3**: Stops when total deposited reaches `totalAmount`
+5. **Notification**: Transaction is logged in the system
+
+### Important Notes
+
+- Auto-deposit requires sufficient balance in the dealer's wallet
+- If dealer's wallet balance is insufficient, auto-deposit will fail and retry later
+- The TikTok account must belong to the dealer making the API call
+- Threshold must be >= 0 (0 means always trigger when account has any spending)
+- Amount must be > 0
+- For mode 2: `maxTimes` must be > 0
+- For mode 3: `totalAmount` must be > 0 and should be >= `amount`
+- When disabled, all settings are preserved but auto-deposit will not execute
+- Changing mode will reset `remainingTopupTimes` accordingly
+
+---
+
+## 4. Add Partner to TikTok Account
 
 Endpoint to add a Business Center (BC) partner to a TikTok account.
 
@@ -501,7 +776,7 @@ else:
 
 ---
 
-## 4. Remove Partner from TikTok Account
+## 5. Remove Partner from TikTok Account
 
 Endpoint to remove a Business Center partner from a TikTok account.
 
