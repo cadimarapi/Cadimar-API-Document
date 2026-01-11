@@ -977,12 +977,17 @@ response = session.get(url, headers=headers)
 
 - **Email**: support@cadimar.net
 - **Website**: https://app.cadimar.net
-- **API Version**: 1.0.0
-- **Last Updated**: December 30, 2025
+- **API Version**: 1.0.1
+- **Last Updated**: January 11, 2026
 
 ---
 
 ## Changelog
+
+### v1.0.1 (2026-01-11)
+- Added Auto-Deposit configuration endpoint
+- Enhanced auto-deposit modes (unlimited, max times, total amount)
+- Updated account list response to include auto-deposit fields
 
 ### v1.0.0 (2025-12-29)
 - Initial API documentation
